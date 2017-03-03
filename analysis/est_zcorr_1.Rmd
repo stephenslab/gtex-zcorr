@@ -1,0 +1,87 @@
+---
+title: "Investigate correlation in z scores "
+author: "Matthew Stephens"
+date: 2017-03-03
+output: html_document
+---
+
+```{r read-chunk, include=FALSE, cache=FALSE}
+knitr::read_chunk("chunks.R")
+```
+
+```{r knitr-opts-chunk, include=FALSE}
+```
+
+**Last updated:** `r Sys.Date()`
+
+**Code version:** `r workflowr::extract_commit(".", 1)$sha1`
+
+
+# Correlation of "nullish" z scores
+
+Read in $z$ scores and look at correlations between "nullish" (very non-signif) $z$ scores.
+In this case I define nullish as absolute value <2.
+```{r}
+source("../code/SumstatQuery.R")
+  ##
+  # Load data for a random subset of eqtls
+  dat <- GetSS("null", "../data/MatrixEQTLSumStats.Portable.h5")
+  bc = "Brain_Cerebellum"
+  bch = "Brain_Cerebellar_Hemisphere"
+ 
+  plot(dat$z[,bc],dat$z[,bch])
+  nullish = abs(dat$z[,bc])<2 & abs(dat$z[,bch])<2
+  cor(dat$z[nullish,bc],dat$z[nullish,bch])
+  
+```
+
+
+Compare whole blood and cerebellum:
+```{r}
+  wb = "Whole_Blood"
+  plot(dat$z[,bc],dat$z[,wb])
+  nullish = abs(dat$z[,wb])<2 & abs(dat$z[,bc])<2
+  cor(dat$z[nullish,wb],dat$z[nullish,bc])
+  
+```
+
+
+# Difference in Z scores
+
+Assume $$z^r_j = \mu^r_j + e_j$$ where $e_1,e_2$ are joint normal with variance 1 and some covariance (same as correlation since they are variance 1).
+Then $E((z^r_1 - z^r_2)^2) = E(\mu^r_1-\mu^r_2)^2 + 2(1-cov(e_1,e_2)) > 2(1-cov(e_1,e_2))$.
+
+Thus $$cov(e_1,e_2) > 1- 0.5E((z^r_1 - z^r_2)^2)$$ gives a lower bound on the covariance.
+The following therefore suggests that the correlation between the two tissues is at least `r 1-0.5*mean((dat$z[,bc]-dat$z[,bch])^2)`.
+
+```{r}
+  hist(dat$z[,bc]-dat$z[,bch])
+  1-0.5*mean((dat$z[,bc]-dat$z[,bch])^2)
+```
+
+But for wb we have a lower bound of `r   1-0.5*mean((dat$z[,bc]-dat$z[,wb])^2)` so we cannot
+be sure of any correlation in this case.
+
+
+## Computations for all tissues
+
+```{r}
+  max_absz = apply(abs(dat$z),1, max)
+  nullish = which(max_absz < 2)
+  nz = dat$z[nullish,]
+  vhat = cor(nz)
+  saveRDS(vhat,file = "../data/vhat.RDS")
+  vhat[bc,bch]
+  vhat[bc,wb]
+  eigen(vhat)
+  dimnames(vhat)=NULL #had to do this to make the figure nice
+  corrplot::corrplot(as.matrix(vhat),xlab="")
+  
+```
+
+
+
+## Session Information
+
+```{r session-info}
+```
