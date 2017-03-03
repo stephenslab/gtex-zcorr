@@ -76,7 +76,6 @@ be sure of any correlation in this case.
   eigen(vhat)
   dimnames(vhat)=NULL #had to do this to make the figure nice
   corrplot::corrplot(as.matrix(vhat),xlab="")
-  
 ```
 
 
