@@ -1,0 +1,52 @@
+---
+title: "Untitled"
+author: "First Last"
+date: YYYY-MM-DD
+output: html_document
+---
+
+```{r read-chunk, include=FALSE, cache=FALSE}
+knitr::read_chunk("chunks.R")
+```
+
+```{r knitr-opts-chunk, include=FALSE}
+```
+
+**Last updated:** `r Sys.Date()`
+
+**Code version:** `r workflowr::extract_commit(".", 1)$sha1`
+
+
+ The following code reads in Vhat from the "nullish" z scores, and checks
+ they exceed the lower bound from [here](est_zcorr_1.html). 
+ If not it replaces them with the lower bound.
+
+
+```{r}
+source("../code/SumstatQuery.R")
+  ##
+  # Load data for a random subset of eqtls
+  dat <- GetSS("null", "../data/MatrixEQTLSumStats.Portable.h5")
+  vhat = readRDS("../data/vhat.RDS")
+  vhat = ifelse(vhat<0, 0,vhat)
+  for(i in 1:(nrow(vhat)-1)){
+    for(j in (i+1):ncol(vhat)){
+      lb = 1-0.5*mean((dat$z[,i]-dat$z[,j])^2)
+      if(vhat[i,j]<lb){vhat[i,j]=lb} #set to lower bound if lower than lower bound
+      vhat[j,i] = vhat[i,j]
+    }
+  }
+  
+  saveRDS(vhat,"../data/vhat.lb.RDS")
+  dimnames(vhat)=NULL #had to do this to make the figure nice
+  corrplot::corrplot(as.matrix(vhat),xlab="")
+```
+
+
+
+
+
+## Session Information
+
+```{r session-info}
+```
