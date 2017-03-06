@@ -19,7 +19,7 @@ knitr::read_chunk("chunks.R")
 
 # Correlation of "nullish" z scores
 
-Read in $z$ scores and look at correlations between "nullish" (very non-signif) $z$ scores.
+Read in $z$ scores and look at correlations between "nullish" (very non-significant) $z$ scores.
 In this case I define nullish as absolute value <2.
 ```{r}
 source("../code/SumstatQuery.R")
